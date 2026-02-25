@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>US Civics Study App</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  background: linear-gradient(135deg, #0d1b2a, #1b263b);
+  color: white;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.app {
+  width: 95%;
+  max-width: 1200px;
+  padding: 40px;
+}
+
+@media (max-width: 768px) {
+  .app { padding: 20px; }
+}
+
+h1,h2 { margin-bottom:20px; }
+
+button {
+  background:#ffd60a;
+  border:none;
+  padding:14px 24px;
+  margin:10px;
+  border-radius:12px;
+  font-weight:bold;
+  cursor:pointer;
+  transition:all 0.2s ease;
+}
+
+button:hover {
+  transform:translateY(-3px);
+  box-shadow:0 8px 20px rgba(255,214,10,0.4);
+}
+
+.hidden { display:none; }
+
+.question {
+  font-size:24px;
+  margin-bottom:20px;
+}
+
+.choice {
+  background:white;
+  color:black;
+  padding:14px;
+  border-radius:10px;
+  margin:8px 0;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.choice:hover { transform:scale(1.02); }
+
+.correct { background:#2ecc71; color:white; }
+.wrong { background:#e74c3c; color:white; }
+
+.progress-container {
+  background:#333;
+  height:10px;
+  border-radius:10px;
+  margin-bottom:15px;
+}
+
+.progress-bar {
+  background:#ffd60a;
+  height:100%;
+  width:0%;
+  transition:width 0.4s ease;
+  border-radius:10px;
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+<div id="home">
+<h1>US Civics Study App</h1>
+<button onclick="startStudy()">Study</button>
+<button onclick="startQuiz()">Quiz</button>
+</div>
+
+<div id="study" class="hidden">
+<h2>Study Mode</h2>
+<div class="question" id="studyQuestion"></div>
+<div id="studyAnswers"></div>
+<button onclick="nextStudy()">Next</button>
+<button onclick="goHome()">Home</button>
+</div>
+
+<div id="quiz" class="hidden">
+<h2>Quiz Mode</h2>
+<div id="progressText"></div>
+<div class="progress-container">
+<div class="progress-bar" id="progressBar"></div>
+</div>
+<div class="question" id="quizQuestion"></div>
+<div id="choices"></div>
+<button onclick="nextQuiz()">Next</button>
+</div>
+
+<div id="result" class="hidden">
+<h2 id="scoreText"></h2>
+<button onclick="startQuiz()">Retake</button>
+<button onclick="goHome()">Home</button>
+</div>
+
+</div>
+
+<script src="questions.js"></script>
+<script>
+
+let studyIndex=0;
+let quizQuestions=[];
+let quizIndex=0;
+let score=0;
+
+function switchScreen(id){
+document.querySelectorAll(".app > div").forEach(d=>d.classList.add("hidden"));
+document.getElementById(id).classList.remove("hidden");
+}
+
+function goHome(){ switchScreen("home"); }
+
+function startStudy(){
+studyIndex=0;
+switchScreen("study");
+showStudy();
+}
+
+function showStudy(){
+let q=questions[studyIndex];
+document.getElementById("studyQuestion").innerText=
+(studyIndex+1)+". "+q.question;
+document.getElementById("studyAnswers").innerHTML=
+"<strong>Answer:</strong><br>"+q.answers.join("<br>");
+}
+
+function nextStudy(){
+studyIndex++;
+if(studyIndex>=questions.length) studyIndex=0;
+showStudy();
+}
+
+function startQuiz(){
+quizQuestions=shuffle([...questions]).slice(0,20);
+quizIndex=0;
+score=0;
+switchScreen("quiz");
+showQuiz();
+}
+
+function showQuiz(){
+let q=quizQuestions[quizIndex];
+document.getElementById("quizQuestion").innerText=q.question;
+
+document.getElementById("progressText").innerText=
+"Question "+(quizIndex+1)+" of 20";
+
+document.getElementById("progressBar").style.width=
+((quizIndex)/20)*100+"%";
+
+let correct=q.answers[0];
+
+let choices=shuffle([
+correct,
+"Incorrect Option A",
+"Incorrect Option B",
+"Incorrect Option C"
+]);
+
+let choicesDiv=document.getElementById("choices");
+choicesDiv.innerHTML="";
+
+choices.forEach(choice=>{
+let div=document.createElement("div");
+div.className="choice";
+div.innerText=choice;
+div.onclick=()=>{
+document.querySelectorAll(".choice").forEach(c=>{
+if(c.innerText===correct) c.classList.add("correct");
+else c.classList.add("wrong");
+c.onclick=null;
+});
+if(choice===correct) score++;
+};
+choicesDiv.appendChild(div);
+});
+}
+
+function nextQuiz(){
+quizIndex++;
+if(quizIndex>=20){
+document.getElementById("progressBar").style.width="100%";
+document.getElementById("scoreText").innerText=
+"Your Score: "+score+" / 20";
+switchScreen("result");
+}else{
+showQuiz();
+}
+}
+
+function shuffle(arr){
+for(let i=arr.length-1;i>0;i--){
+let j=Math.floor(Math.random()*(i+1));
+[arr[i],arr[j]]=[arr[j],arr[i]];
+}
+return arr;
+}
+
+</script>
+</body>
+</html>
